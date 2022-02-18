@@ -112,10 +112,12 @@ def main():
     plt.show()
     print()
 
+
 class Cell():
     EMPTY_COLOR_BG = "white"
-    EMPTY_COLOR_BORDER = "red"
+    EMPTY_COLOR_BORDER = "black"
     MAX_HEIGHT = 255
+    MIN_HEIGHT = -255
     STEP = 25
 
     def __init__(self, master, x, y, size):
@@ -127,25 +129,33 @@ class Cell():
         self.height = 0
 
     def increase_height(self):
-        self.height = self.height + Cell.STEP
+
+        if self.height + Cell.STEP < Cell.MAX_HEIGHT:
+            self.height = self.height + Cell.STEP
 
     def decrease_height(self):
-        self.height = self.height - Cell.STEP
+
+        if self.height - Cell.STEP > Cell.MIN_HEIGHT:
+            self.height = self.height - Cell.STEP
 
     def clamp(self, x):
-        return max(0, min(x, 255))
+        return max(-255, min(x, 255))
 
     def draw(self):
         """ order to the cell to draw its representation on the canvas """
         if self.master != None:
-            #fill = Cell.FILLED_COLOR_BG
-            #outline = Cell.FILLED_COLOR_BORDER
+            # fill = Cell.FILLED_COLOR_BG
+            # outline = Cell.FILLED_COLOR_BORDER
 
-            #if not self.fill:
+            # if not self.fill:
             #    fill = Cell.EMPTY_COLOR_BG
             #    outline = Cell.EMPTY_COLOR_BORDER
 
-            fill = "#{0:02x}{1:02x}{2:02x}".format(255 - self.clamp(self.height), 255 - self.clamp(self.height), 255 - self.clamp(self.height))
+            if self.height >= 0:
+                fill = "#{0:02x}{1:02x}{2:02x}".format(255, 255 - self.clamp(self.height), 255 - self.clamp(self.height))
+            elif self.height < 0:
+                fill = "#{0:02x}{1:02x}{2:02x}".format(255 + self.clamp(self.height), 255 + self.clamp(self.height), 255)
+
             outline = Cell.EMPTY_COLOR_BORDER
 
             xmin = self.abs * self.size
@@ -175,11 +185,13 @@ class CellGrid(Canvas):
         self.switched = []
 
         # bind click action
-        self.bind("<Button-1>", self.handleMouseClickLeft)
+        self.bind("<Button-1>", self.handle_mouse_click_left)
         # bind click action
-        self.bind("<Button-3>", self.handleMouseClickRight)
+        self.bind("<Button-3>", self.handle_mouse_click_right)
         # bind moving while clicking
-        self.bind("<B1-Motion>", self.handleMouseMotion)
+        self.bind("<B1-Motion>", self.handle_mouse_motion_left)
+        # bind moving while clicking
+        self.bind("<B3-Motion>", self.handle_mouse_motion_right)
         # bind release button action - clear the memory of midified cells.
         self.bind("<ButtonRelease-1>", lambda event: self.switched.clear())
 
@@ -195,7 +207,7 @@ class CellGrid(Canvas):
         column = int(event.x / self.cellSize)
         return row, column
 
-    def handleMouseClickLeft(self, event):
+    def handle_mouse_click_left(self, event):
         row, column = self._eventCoords(event)
         cell = self.grid[row][column]
         cell.increase_height()
@@ -203,7 +215,7 @@ class CellGrid(Canvas):
         # add the cell to the list of cell switched during the click
         self.switched.append(cell)
 
-    def handleMouseClickRight(self, event):
+    def handle_mouse_click_right(self, event):
         row, column = self._eventCoords(event)
         cell = self.grid[row][column]
         cell.decrease_height()
@@ -211,7 +223,7 @@ class CellGrid(Canvas):
         # add the cell to the list of cell switched during the click
         self.switched.append(cell)
 
-    def handleMouseMotion(self, event):
+    def handle_mouse_motion_left(self, event):
         row, column = self._eventCoords(event)
         cell = self.grid[row][column]
 
@@ -220,11 +232,20 @@ class CellGrid(Canvas):
             cell.draw()
             self.switched.append(cell)
 
+    def handle_mouse_motion_right(self, event):
+        row, column = self._eventCoords(event)
+        cell = self.grid[row][column]
+
+        if cell not in self.switched:
+            cell.decrease_height()
+            cell.draw()
+            self.switched.append(cell)
+
 
 if __name__ == '__main__':
     app = Tk()
 
-    grid = CellGrid(app, 100, 100, 50)
+    grid = CellGrid(app, 100, 100, 10)
     grid.pack()
 
     app.mainloop()
