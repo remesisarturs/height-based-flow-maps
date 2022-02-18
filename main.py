@@ -14,15 +14,36 @@ def main():
         reader = csv.reader(f)
         data = list(reader)
 
-    data_processesd = []
+    data_processed = []
 
     for item in data:
-        data_processesd.append(item[0].split(";"))
+        data_processed.append((item[0].split(";")[0], float(item[0].split(";")[1]), float(item[0].split(";")[2])))
 
     G = nx.DiGraph()
 
-    for item in data_processesd:
-        G.add_node(item[0], pos=(float(item[1]), float(item[2])))
+    for item in data_processed:
+
+        if data_processed.index(item) == 0:
+            minx = item[1]
+            miny = item[2]
+            maxx = item[1]
+            maxy = item[2]
+
+        if item[1] < minx:
+            minx = item[1]
+        if item[1] > maxx:
+            maxx = item[1]
+        if item[2] < miny:
+            miny = item[2]
+        if item[2] > maxy:
+            maxy = item[2]
+
+        G.add_node(item[0], pos=(float(item[1]), float(item[2])), node_color='blue')
+
+    plt.axvline(x=maxx)
+    plt.axvline(x=minx)
+    plt.axhline(y=maxy)
+    plt.axhline(y=miny)
 
     # states = geopandas.read_file(r"C:\Users\20175326\Desktop\Thesis\Data\usa-states-census-2014.shp")
     # states = states.to_crs("EPSG:3395")
@@ -173,6 +194,10 @@ class CellGrid(Canvas):
         self.cellSize = cellSize
 
         self.grid = []
+
+        # Structure of grid:
+        # grid[line][column] = cell
+
         for row in range(rowNumber):
 
             line = []
@@ -243,9 +268,9 @@ class CellGrid(Canvas):
 
 
 if __name__ == '__main__':
-    app = Tk()
+    main()
 
-    grid = CellGrid(app, 100, 100, 10)
-    grid.pack()
-
-    app.mainloop()
+    # app = Tk()
+    # grid = CellGrid(app, 100, 100, 10)
+    # grid.pack()
+    # app.mainloop()
