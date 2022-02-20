@@ -31,16 +31,20 @@ def obtain_bounds(input_points):
 
 
 def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_coordinates):
+
+    # min and max coordinates of input points:
     min_x = bounds[0]
     max_x = bounds[1]
 
     min_y = bounds[2]
     max_y = bounds[3]
 
+    # the extent/spread/length of space in x and y dimension
     extent_x = max_x - min_x
     extent_y = max_y - min_y
 
-    step_x = extent_x / nr_of_columns  # TODO: here nr of cells should be the nr of cells we have on the x axis, same for y below
+    # Step = the size of a cell
+    step_x = extent_x / nr_of_columns
     step_y = extent_y / nr_of_rows
 
     coordinate_and_cell = []
@@ -59,16 +63,18 @@ def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_
         while min_x + i * step_x < x:
             i = i + 1
 
+
         column_index = i - 1
 
         while min_y + j * step_y < y:
             j = j + 1
 
-        row_index = j - 1
+        row_index = nr_of_rows - j - 1
 
         coordinate_and_cell.append((point, column_index, row_index))
 
     return coordinate_and_cell
+
 
 def main():
     with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
@@ -206,8 +212,8 @@ class Cell():
     def __init__(self, master, x, y, size):
         """ Constructor of the object called by Cell(...) """
         self.master = master
-        self.abs = x
-        self.ord = y
+        self.abs = x    # abs = x coordinate
+        self.ord = y    # ord = y coordinate
         self.size = size
         self.height = 0
 
@@ -247,10 +253,11 @@ class Cell():
             ymax = ymin + self.size
 
             self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=fill, outline=outline)
+            #self.master.create_text((xmin + self.size/2, ymin + self.size/2), text="")
 
 
 class CellGrid(Canvas):
-    def __init__(self, master, rowNumber, columnNumber, cellSize, *args, **kwargs):
+    def __init__(self, master, rowNumber, columnNumber, cellSize, coordinate_and_cell, *args, **kwargs):
         Canvas.__init__(self, master, width=cellSize * columnNumber, height=cellSize * rowNumber, *args, **kwargs)
 
         self.cellSize = cellSize
@@ -262,11 +269,27 @@ class CellGrid(Canvas):
 
         for row in range(rowNumber):
 
-            line = []
-            for column in range(columnNumber):
-                line.append(Cell(self, column, row, cellSize))
+            column = []
+            for col in range(columnNumber):
+                column.append(Cell(self, col, row, cellSize))
 
-            self.grid.append(line)
+            self.grid.append(column)
+
+        for point_info in coordinate_and_cell:
+            row = point_info[2]
+            column = point_info[1]
+
+            self.grid[row][column].height = 100
+
+            # xmin = self.abs * self.size
+            # xmax = xmin + self.size
+            # ymin = self.ord * self.size
+            # ymax = ymin + self.size
+            #
+            # self.master.create_text((xmin + self.size / 2, ymin + self.size / 2), text="aa")
+
+
+            # print()
 
         # memorize the cells that have been modified to avoid many switching of state during mouse motion.
         self.switched = []
@@ -284,10 +307,40 @@ class CellGrid(Canvas):
 
         self.draw()
 
+        self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
     def draw(self):
         for row in self.grid:
             for cell in row:
                 cell.draw()
+
+    def draw_text_in_cells(self, coordinate_and_cell):
+
+        # for row in self.grid:
+        #     for cell in row:
+        #
+        #         xmin = cell.abs * cell.size
+        #         xmax = xmin + cell.size
+        #         ymin = cell.ord * cell.size
+        #         ymax = ymin + cell.size
+        #
+        #         cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text="aa")
+
+        for point_info in coordinate_and_cell:
+            row_id = point_info[2]
+            column_id = point_info[1]
+
+            row = self.grid[row_id]
+            cell = row[column_id]
+
+            xmin = cell.abs * cell.size
+            xmax = xmin + cell.size
+            ymin = cell.ord * cell.size
+            ymax = ymin + cell.size
+
+            text = point_info[0][0]
+
+            cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=text)
 
     def _eventCoords(self, event):
         row = int(event.y / self.cellSize)
@@ -345,13 +398,16 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
+    NR_OF_ROWS = 50
+    NR_OF_CELLS = 50
+
     input_points = import_points()
 
     bounds = obtain_bounds(input_points)
 
-    coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=100, nr_of_columns=100, input_points_coordinates=input_points)
+    coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=NR_OF_ROWS, nr_of_columns=NR_OF_CELLS, input_points_coordinates=input_points)
 
     app = Tk()
-    grid = CellGrid(app, 100, 100, 10)
+    grid = CellGrid(master=app, rowNumber=NR_OF_ROWS, columnNumber=NR_OF_CELLS, cellSize=14, coordinate_and_cell=coordinate_and_cell)
     grid.pack()
     app.mainloop()
