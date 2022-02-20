@@ -9,6 +9,67 @@ import matplotlib as mpl
 from tkinter import *
 
 
+def obtain_bounds(input_points):
+    for item in input_points:
+
+        if input_points.index(item) == 0:
+            minx = item[1]
+            miny = item[2]
+            maxx = item[1]
+            maxy = item[2]
+
+        if item[1] < minx:
+            minx = item[1]
+        if item[1] > maxx:
+            maxx = item[1]
+        if item[2] < miny:
+            miny = item[2]
+        if item[2] > maxy:
+            maxy = item[2]
+
+    return minx, maxx, miny, maxy
+
+
+def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_coordinates):
+    min_x = bounds[0]
+    max_x = bounds[1]
+
+    min_y = bounds[2]
+    max_y = bounds[3]
+
+    extent_x = max_x - min_x
+    extent_y = max_y - min_y
+
+    step_x = extent_x / nr_of_columns  # TODO: here nr of cells should be the nr of cells we have on the x axis, same for y below
+    step_y = extent_y / nr_of_rows
+
+    coordinate_and_cell = []
+
+    for point in input_points_coordinates:
+
+        # the coordinates of the point:
+        x = float(point[1])
+        y = float(point[2])
+
+        # i and j are the indices of the row and column in the grid
+        i = 0
+        j = 0
+
+        # increase the
+        while min_x + i * step_x < x:
+            i = i + 1
+
+        column_index = i - 1
+
+        while min_y + j * step_y < y:
+            j = j + 1
+
+        row_index = j - 1
+
+        coordinate_and_cell.append((point, column_index, row_index))
+
+    return coordinate_and_cell
+
 def main():
     with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
         reader = csv.reader(f)
@@ -140,6 +201,7 @@ class Cell():
     MAX_HEIGHT = 255
     MIN_HEIGHT = -255
     STEP = 25
+    IS_SOURCE_OR_DESTINATION_CELL = False
 
     def __init__(self, master, x, y, size):
         """ Constructor of the object called by Cell(...) """
@@ -267,10 +329,29 @@ class CellGrid(Canvas):
             self.switched.append(cell)
 
 
-if __name__ == '__main__':
-    main()
+def import_points():
+    with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
+        reader = csv.reader(f)
+        data = list(reader)
 
-    # app = Tk()
-    # grid = CellGrid(app, 100, 100, 10)
-    # grid.pack()
-    # app.mainloop()
+    data_processed = []
+
+    for item in data:
+        data_processed.append((item[0].split(";")[0], float(item[0].split(";")[1]), float(item[0].split(";")[2])))
+
+    return data_processed
+
+
+if __name__ == '__main__':
+    # bounds = [minx, maxx, miny, maxy]
+
+    input_points = import_points()
+
+    bounds = obtain_bounds(input_points)
+
+    coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=100, nr_of_columns=100, input_points_coordinates=input_points)
+
+    app = Tk()
+    grid = CellGrid(app, 100, 100, 10)
+    grid.pack()
+    app.mainloop()
