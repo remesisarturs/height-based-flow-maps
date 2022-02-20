@@ -39,6 +39,7 @@ def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_
     min_y = bounds[2]
     max_y = bounds[3]
 
+
     # the extent/spread/length of space in x and y dimension
     extent_x = max_x - min_x
     extent_y = max_y - min_y
