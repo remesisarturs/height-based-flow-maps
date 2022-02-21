@@ -1,10 +1,6 @@
 import csv
 import networkx as nx
 from matplotlib import pyplot as plt
-from matplotlib import pyplot
-
-import numpy as np
-import matplotlib as mpl
 
 from tkinter import *
 
@@ -31,14 +27,12 @@ def obtain_bounds(input_points):
 
 
 def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_coordinates):
-
     # min and max coordinates of input points:
     min_x = bounds[0]
     max_x = bounds[1]
 
     min_y = bounds[2]
     max_y = bounds[3]
-
 
     # the extent/spread/length of space in x and y dimension
     extent_x = max_x - min_x
@@ -57,13 +51,12 @@ def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_
         y = float(point[2])
 
         # i and j are the indices of the row and column in the grid
-        i = 0
-        j = 0
+        i = 1
+        j = 1
 
         # increase the
         while min_x + i * step_x < x:
             i = i + 1
-
 
         column_index = i - 1
 
@@ -71,6 +64,10 @@ def compute_cell_for_coordinate(bounds, nr_of_rows, nr_of_columns, input_points_
             j = j + 1
 
         row_index = nr_of_rows - j - 1
+
+        if row_index < 0:
+            # TODO: temporary fix, investigate if this causes issues later
+            row_index = abs(row_index)
 
         coordinate_and_cell.append((point, column_index, row_index))
 
@@ -213,8 +210,8 @@ class Cell():
     def __init__(self, master, x, y, size):
         """ Constructor of the object called by Cell(...) """
         self.master = master
-        self.abs = x    # abs = x coordinate
-        self.ord = y    # ord = y coordinate
+        self.abs = x  # abs = x coordinate
+        self.ord = y  # ord = y coordinate
         self.size = size
         self.height = 0
 
@@ -254,7 +251,7 @@ class Cell():
             ymax = ymin + self.size
 
             self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=fill, outline=outline)
-            #self.master.create_text((xmin + self.size/2, ymin + self.size/2), text="")
+            # self.master.create_text((xmin + self.size/2, ymin + self.size/2), text="")
 
 
 class CellGrid(Canvas):
@@ -289,7 +286,6 @@ class CellGrid(Canvas):
             #
             # self.master.create_text((xmin + self.size / 2, ymin + self.size / 2), text="aa")
 
-
             # print()
 
         # memorize the cells that have been modified to avoid many switching of state during mouse motion.
@@ -305,6 +301,8 @@ class CellGrid(Canvas):
         self.bind("<B3-Motion>", self.handle_mouse_motion_right)
         # bind release button action - clear the memory of midified cells.
         self.bind("<ButtonRelease-1>", lambda event: self.switched.clear())
+
+        self.bind("<MouseWheel>", self.do_zoom)
 
         self.draw()
 
@@ -382,6 +380,11 @@ class CellGrid(Canvas):
             cell.draw()
             self.switched.append(cell)
 
+    def do_zoom(self, event):
+        x = self.canvasx(event.x)
+        y = self.canvasy(event.y)
+        factor = 1.001 ** event.delta
+        self.scale(ALL, x, y, factor, factor)
 
 def import_points():
     with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
@@ -399,8 +402,9 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
-    NR_OF_ROWS = 50
-    NR_OF_CELLS = 50
+    NR_OF_ROWS = 120
+    NR_OF_CELLS = 120
+    CELL_SIZE = 7
 
     input_points = import_points()
 
@@ -409,6 +413,6 @@ if __name__ == '__main__':
     coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=NR_OF_ROWS, nr_of_columns=NR_OF_CELLS, input_points_coordinates=input_points)
 
     app = Tk()
-    grid = CellGrid(master=app, rowNumber=NR_OF_ROWS, columnNumber=NR_OF_CELLS, cellSize=14, coordinate_and_cell=coordinate_and_cell)
+    grid = CellGrid(master=app, rowNumber=NR_OF_ROWS, columnNumber=NR_OF_CELLS, cellSize=CELL_SIZE, coordinate_and_cell=coordinate_and_cell)
     grid.pack()
     app.mainloop()
