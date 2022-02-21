@@ -213,7 +213,7 @@ class Cell():
         self.abs = x  # abs = x coordinate
         self.ord = y  # ord = y coordinate
         self.size = size
-        self.height = 0
+        self.height = 0.0
 
     def increase_height(self):
 
@@ -239,9 +239,9 @@ class Cell():
             #    outline = Cell.EMPTY_COLOR_BORDER
 
             if self.height >= 0:
-                fill = "#{0:02x}{1:02x}{2:02x}".format(255, 255 - self.clamp(self.height), 255 - self.clamp(self.height))
+                fill = "#{0:02x}{1:02x}{2:02x}".format(255, 255 - self.clamp(int(self.height)), 255 - self.clamp(int(self.height)))
             elif self.height < 0:
-                fill = "#{0:02x}{1:02x}{2:02x}".format(255 + self.clamp(self.height), 255 + self.clamp(self.height), 255)
+                fill = "#{0:02x}{1:02x}{2:02x}".format(255 + self.clamp(int(self.height)), 255 + self.clamp(int(self.height)), 255)
 
             outline = Cell.EMPTY_COLOR_BORDER
 
@@ -277,9 +277,15 @@ class CellGrid(Canvas):
             row = point_info[2]
             column = point_info[1]
 
-            self.grid[row][column].height = 100
+            self.grid[row][column].height = 50
 
-            # xmin = self.abs * self.size
+        for row in self.grid:
+            for cell in row:
+                row_id = 98
+                col_id = 81
+                cell.height = cell.height + 0.01 * ((self.grid.index(row) - row_id) ** 2 + (row.index(cell) - col_id) ** 2)
+
+                # xmin = self.abs * self.size
             # xmax = xmin + self.size
             # ymin = self.ord * self.size
             # ymax = ymin + self.size
@@ -323,7 +329,7 @@ class CellGrid(Canvas):
         #         ymin = cell.ord * cell.size
         #         ymax = ymin + cell.size
         #
-        #         cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text="aa")
+        #         cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=cell.height)
 
         for point_info in coordinate_and_cell:
             row_id = point_info[2]
@@ -386,6 +392,7 @@ class CellGrid(Canvas):
         factor = 1.001 ** event.delta
         self.scale(ALL, x, y, factor, factor)
 
+
 def import_points():
     with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
         reader = csv.reader(f)
@@ -402,9 +409,9 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
-    NR_OF_ROWS = 120
-    NR_OF_CELLS = 120
-    CELL_SIZE = 7
+    NR_OF_ROWS = 50
+    NR_OF_CELLS = 50
+    CELL_SIZE = 15
 
     input_points = import_points()
 
