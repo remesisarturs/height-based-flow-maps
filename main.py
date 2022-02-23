@@ -207,13 +207,14 @@ class Cell():
     STEP = 25
     IS_SOURCE_OR_DESTINATION_CELL = False
 
-    def __init__(self, master, x, y, size):
+    def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
         self.master = master
         self.abs = x  # abs = x coordinate
         self.ord = y  # ord = y coordinate
         self.size = size
         self.height = 0.0
+        self.flow = 0.0
 
     def increase_height(self):
 
@@ -269,7 +270,7 @@ class CellGrid(Canvas):
 
             column = []
             for col in range(columnNumber):
-                column.append(Cell(self, col, row, cellSize))
+                column.append(Cell(self, col, row, cellSize, flow=0))
 
             self.grid.append(column)
 
@@ -283,7 +284,47 @@ class CellGrid(Canvas):
             for cell in row:
                 row_id = 98
                 col_id = 81
-                cell.height = cell.height + 0.01 * ((self.grid.index(row) - row_id) ** 2 + (row.index(cell) - col_id) ** 2)
+                cell.height = cell.height + 0.01 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
+
+        for row in self.grid:
+            for cell in row:
+
+                x = cell.abs
+                y = cell.ord
+
+                try:
+                    left = self.grid[x - 1][y]
+                    bottom = self.grid[x][y - 1]
+                    right = self.grid[x + 1][y]
+                    top = self.grid[x][y + 1]
+
+                    top_left = self.grid[x - 1][y - 1]
+                    top_right = self.grid[x + 1][y - 1]
+                    bottom_left = self.grid[x - 1][y + 1]
+                    bottom_right = self.grid[x + 1][y + 1]
+
+                    min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+
+                    if min_neighbor == left:
+                        cell.flow = 16
+                    elif min_neighbor == right:
+                        cell.flow = 1
+                    elif min_neighbor == bottom:
+                        cell.flow = 4
+                    elif min_neighbor == top:
+                        cell.flow = 64
+                    elif min_neighbor == top_left:
+                        cell.flow = 32
+                    elif min_neighbor == top_right:
+                        cell.flow = 128
+                    elif min_neighbor == bottom_left:
+                        cell.flow = 8
+                    elif min_neighbor == bottom_right:
+                        cell.flow = 2
+
+                except:
+                    continue
+                # get neighbors:
 
                 # xmin = self.abs * self.size
             # xmax = xmin + self.size
