@@ -292,38 +292,41 @@ class CellGrid(Canvas):
                 x = cell.abs
                 y = cell.ord
 
-                try:
-                    left = self.grid[x - 1][y]
-                    bottom = self.grid[x][y - 1]
-                    right = self.grid[x + 1][y]
-                    top = self.grid[x][y + 1]
+                if (x - 1 >= 0 and y - 1 >= 0):
+                    try:
+                        left = self.grid[x - 1][y]
+                        bottom = self.grid[x][y - 1]
+                        right = self.grid[x + 1][y]
+                        top = self.grid[x][y + 1]
 
-                    top_left = self.grid[x - 1][y - 1]
-                    top_right = self.grid[x + 1][y - 1]
-                    bottom_left = self.grid[x - 1][y + 1]
-                    bottom_right = self.grid[x + 1][y + 1]
+                        top_left = self.grid[x - 1][y - 1]
+                        top_right = self.grid[x + 1][y - 1]
+                        bottom_left = self.grid[x - 1][y + 1]
+                        bottom_right = self.grid[x + 1][y + 1]
 
-                    min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+                        # TODO: add maximum drop formula
+                        min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
-                    if min_neighbor == left:
-                        cell.flow = 16
-                    elif min_neighbor == right:
-                        cell.flow = 1
-                    elif min_neighbor == bottom:
-                        cell.flow = 4
-                    elif min_neighbor == top:
-                        cell.flow = 64
-                    elif min_neighbor == top_left:
-                        cell.flow = 32
-                    elif min_neighbor == top_right:
-                        cell.flow = 128
-                    elif min_neighbor == bottom_left:
-                        cell.flow = 8
-                    elif min_neighbor == bottom_right:
-                        cell.flow = 2
+                        if min_neighbor == left:
+                            cell.flow = 16
+                        elif min_neighbor == right:
+                            cell.flow = 1
+                        elif min_neighbor == bottom:
+                            cell.flow = 4
+                        elif min_neighbor == top:
+                            cell.flow = 64
+                        elif min_neighbor == top_left:
+                            cell.flow = 32
+                        elif min_neighbor == top_right:
+                            cell.flow = 128
+                        elif min_neighbor == bottom_left:
+                            cell.flow = 8
+                        elif min_neighbor == bottom_right:
+                            cell.flow = 2
 
-                except:
-                    continue
+                        #cell.height = -10
+                    except:
+                        continue
                 # get neighbors:
 
                 # xmin = self.abs * self.size
@@ -351,9 +354,23 @@ class CellGrid(Canvas):
 
         self.bind("<MouseWheel>", self.do_zoom)
 
+        self.bind("<Button-2>", self.show_flow)
+
         self.draw()
 
         self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
+    def show_flow(self, event):
+
+        for row in self.grid:
+            for cell in row:
+                flow = cell.flow
+
+                xmin = cell.abs * cell.size
+                ymin = cell.ord * cell.size
+
+                cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=flow)
+
 
     def draw(self):
         for row in self.grid:
