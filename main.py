@@ -203,7 +203,7 @@ class Cell():
     EMPTY_COLOR_BG = "white"
     EMPTY_COLOR_BORDER = "black"
     MAX_HEIGHT = 255
-    MIN_HEIGHT = -255
+    MIN_HEIGHT = 0
     STEP = 25
     IS_SOURCE_OR_DESTINATION_CELL = False
 
@@ -305,7 +305,25 @@ class CellGrid(Canvas):
                         bottom_right = self.grid[x + 1][y + 1]
 
                         # TODO: add maximum drop formula
-                        min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+
+                        neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
+                        drop_for_neighbors = []
+
+                        for n in neighbors:
+
+                            change_in_height = cell.height - n.height
+
+                            if n == left or n == right or n == top or n == bottom:
+                                distance = 1
+                            elif n == top_left or n == top_right or n == bottom_left or bottom_right:
+                                distance = 1.414 # sqrt of 2
+
+                            drop = (change_in_height / distance) * 100
+                            drop_for_neighbors.append(drop)
+
+                        min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
+
+                        #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
                         if min_neighbor == left:
                             cell.flow = 16
@@ -354,11 +372,13 @@ class CellGrid(Canvas):
 
         self.bind("<MouseWheel>", self.do_zoom)
 
-        self.bind("<Button-2>", self.show_flow)
+        self.bind("<Button-2>", self.draw_flow_arrows)
 
         self.draw()
 
-        self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+        #self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
+
 
     def show_flow(self, event):
 
@@ -376,6 +396,36 @@ class CellGrid(Canvas):
         for row in self.grid:
             for cell in row:
                 cell.draw()
+
+    def draw_flow_arrows(self, event):
+
+        for row in self.grid:
+            for cell in row:
+
+                xmin = cell.abs * cell.size
+                ymin = cell.ord * cell.size
+
+                arrow = ""
+
+                if cell.flow == 1:
+                    arrow = "→"
+                elif cell.flow == 2:
+                    arrow = "↘"
+                elif cell.flow == 4:
+                    arrow = "↓"
+                elif cell.flow == 8:
+                    arrow = "↙"
+                elif cell.flow == 16:
+                    arrow = "←"
+                elif cell.flow == 32:
+                    arrow = "↖"
+                elif cell.flow == 64:
+                    arrow = "↑"
+                elif cell.flow == 128:
+                    arrow = "↗"
+
+                cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=arrow)
+
 
     def draw_text_in_cells(self, coordinate_and_cell):
 
