@@ -264,7 +264,9 @@ class CellGrid(Canvas):
         self.grid = []
 
         # Structure of grid:
-        # grid[line][column] = cell
+        # grid[row][column] = cell
+        # grid[y][x] = cell
+        # Cell(x, y)
 
         for row in range(rowNumber):
 
@@ -275,16 +277,16 @@ class CellGrid(Canvas):
             self.grid.append(column)
 
         for point_info in coordinate_and_cell:
-            row = point_info[2]
-            column = point_info[1]
+            row = point_info[2]     # y
+            column = point_info[1]  # x
 
             self.grid[row][column].height = 50
 
         for row in self.grid:
             for cell in row:
-                row_id = 98
-                col_id = 81
-                cell.height = cell.height + 0.01 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
+                row_id = 25
+                col_id = 25
+                cell.height = cell.height + 0.07 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
 
         for row in self.grid:
             for cell in row:
@@ -295,9 +297,9 @@ class CellGrid(Canvas):
                 if (x - 1 >= 0 and y - 1 >= 0):
                     try:
                         left = self.grid[x - 1][y]
-                        bottom = self.grid[x][y - 1]
+                        bottom = self.grid[x][y + 1]
                         right = self.grid[x + 1][y]
-                        top = self.grid[x][y + 1]
+                        top = self.grid[x][y - 1]
 
                         top_left = self.grid[x - 1][y - 1]
                         top_right = self.grid[x + 1][y - 1]
@@ -376,11 +378,35 @@ class CellGrid(Canvas):
 
         self.draw()
 
+        #self.draw_grid_height()
+
+        #self.draw_grid_indices()
+
         #self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
 
+    def draw_grid_height(self):
 
+        for row in self.grid:
+            for cell in row:
 
-    def show_flow(self, event):
+                xmin = cell.abs * cell.size
+                ymin = cell.ord * cell.size
+
+                cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=str(round(cell.height, 1)))
+
+    def draw_grid_indices(self):
+
+        for row in self.grid:
+            for cell in row:
+
+                text = str(self.grid.index(row)) + "" + str(row.index(cell))
+
+                xmin = cell.abs * cell.size
+                ymin = cell.ord * cell.size
+
+                cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=text)
+
+    def draw_grid_flow(self, event):
 
         for row in self.grid:
             for cell in row:
@@ -519,7 +545,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 15
+    CELL_SIZE = 20
 
     input_points = import_points()
 
