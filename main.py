@@ -284,9 +284,9 @@ class CellGrid(Canvas):
 
         for row in self.grid:
             for cell in row:
-                row_id = 25
-                col_id = 25
-                cell.height = cell.height + 0.07 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
+                row_id = 48    # 48
+                col_id = 40         # 40
+                cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
 
         for row in self.grid:
             for cell in row:
@@ -305,8 +305,6 @@ class CellGrid(Canvas):
                         top_right = self.grid[x + 1][y - 1]
                         bottom_left = self.grid[x - 1][y + 1]
                         bottom_right = self.grid[x + 1][y + 1]
-
-                        # TODO: add maximum drop formula
 
                         neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
                         drop_for_neighbors = []
@@ -347,16 +345,6 @@ class CellGrid(Canvas):
                         #cell.height = -10
                     except:
                         continue
-                # get neighbors:
-
-                # xmin = self.abs * self.size
-            # xmax = xmin + self.size
-            # ymin = self.ord * self.size
-            # ymax = ymin + self.size
-            #
-            # self.master.create_text((xmin + self.size / 2, ymin + self.size / 2), text="aa")
-
-            # print()
 
         # memorize the cells that have been modified to avoid many switching of state during mouse motion.
         self.switched = []
@@ -378,11 +366,27 @@ class CellGrid(Canvas):
 
         self.draw()
 
+        self.find_paths_from_target_to_source(coordinate_and_cell)
+
         #self.draw_grid_height()
 
         #self.draw_grid_indices()
 
         #self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
+    def find_paths_from_target_to_source(self, coordinate_and_cell):
+
+        target = "FL"
+
+        for node in coordinate_and_cell:
+
+            node_name = node[0][0]
+            node_x = node[1]
+            node_y = node[2]
+
+            # TODO: while node is not target node, take the flow node of current node, iterate. 
+
+            print()
 
     def draw_grid_height(self):
 
@@ -545,7 +549,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 20
+    CELL_SIZE = 16
 
     input_points = import_points()
 
