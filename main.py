@@ -206,6 +206,8 @@ class Cell():
     MIN_HEIGHT = 0
     STEP = 25
     IS_SOURCE_OR_DESTINATION_CELL = False
+    NAME = None
+    FLOW = None
 
     def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
@@ -281,6 +283,11 @@ class CellGrid(Canvas):
             column = point_info[1]  # x
 
             self.grid[row][column].height = 50
+
+            self.grid[row][column].IS_SOURCE_OR_DESTINATION_CELL = True
+
+            self.grid[row][column].NAME = str(point_info[0][0])
+
 
         for row in self.grid:
             for cell in row:
@@ -384,7 +391,11 @@ class CellGrid(Canvas):
             node_x = node[1]
             node_y = node[2]
 
-            # TODO: while node is not target node, take the flow node of current node, iterate. 
+            # TODO: while node is not target node, take the flow node of current node, iterate.
+
+            cell_node = self.grid[node_y][node_x]
+
+
 
             print()
 
