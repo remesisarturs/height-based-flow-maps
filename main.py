@@ -1,4 +1,5 @@
 import csv
+
 import networkx as nx
 from matplotlib import pyplot as plt
 
@@ -207,7 +208,7 @@ class Cell():
     STEP = 25
     IS_SOURCE_OR_DESTINATION_CELL = False
     NAME = None
-    FLOW = None
+    FLOW = 0
 
     def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
@@ -216,7 +217,7 @@ class Cell():
         self.ord = y  # ord = y coordinate
         self.size = size
         self.height = 0.0
-        self.flow = 0.0
+        # self.flow = 0.0
 
     def increase_height(self):
 
@@ -279,7 +280,7 @@ class CellGrid(Canvas):
             self.grid.append(column)
 
         for point_info in coordinate_and_cell:
-            row = point_info[2]     # y
+            row = point_info[2]  # y
             column = point_info[1]  # x
 
             self.grid[row][column].height = 50
@@ -288,11 +289,10 @@ class CellGrid(Canvas):
 
             self.grid[row][column].NAME = str(point_info[0][0])
 
-
         for row in self.grid:
             for cell in row:
-                row_id = 48    # 48
-                col_id = 40         # 40
+                row_id = 48  # 48
+                col_id = 40  # 40
                 cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
 
         for row in self.grid:
@@ -323,33 +323,33 @@ class CellGrid(Canvas):
                             if n == left or n == right or n == top or n == bottom:
                                 distance = 1
                             elif n == top_left or n == top_right or n == bottom_left or bottom_right:
-                                distance = 1.414 # sqrt of 2
+                                distance = 1.414  # sqrt of 2
 
                             drop = (change_in_height / distance) * 100
                             drop_for_neighbors.append(drop)
 
                         min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
 
-                        #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+                        # min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
                         if min_neighbor == left:
-                            cell.flow = 16
+                            cell.FLOW = 16
                         elif min_neighbor == right:
-                            cell.flow = 1
+                            cell.FLOW = 1
                         elif min_neighbor == bottom:
-                            cell.flow = 4
+                            cell.FLOW = 4
                         elif min_neighbor == top:
-                            cell.flow = 64
+                            cell.FLOW = 64
                         elif min_neighbor == top_left:
-                            cell.flow = 32
+                            cell.FLOW = 32
                         elif min_neighbor == top_right:
-                            cell.flow = 128
+                            cell.FLOW = 128
                         elif min_neighbor == bottom_left:
-                            cell.flow = 8
+                            cell.FLOW = 8
                         elif min_neighbor == bottom_right:
-                            cell.flow = 2
+                            cell.FLOW = 2
 
-                        #cell.height = -10
+                        # cell.height = -10
                     except:
                         continue
 
@@ -373,17 +373,23 @@ class CellGrid(Canvas):
 
         self.draw()
 
-        self.find_paths_from_target_to_source(coordinate_and_cell)
+        paths = self.find_paths_from_target_to_source(coordinate_and_cell)
 
-        #self.draw_grid_height()
+        print()
 
-        #self.draw_grid_indices()
+        
 
-        #self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+        # self.draw_grid_height()
+
+        # self.draw_grid_indices()
+
+        # self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
 
     def find_paths_from_target_to_source(self, coordinate_and_cell):
 
         target = "FL"
+
+        paths = []
 
         for node in coordinate_and_cell:
 
@@ -395,15 +401,72 @@ class CellGrid(Canvas):
 
             cell_node = self.grid[node_y][node_x]
 
+            current_node = cell_node
 
+            path = []
 
-            print()
+            if cell_node.FLOW != 0:
+
+                flow = cell_node.FLOW
+
+                path.append(current_node)
+
+                # grid[row][column]
+
+                if flow == 1:
+                    flows_into = self.grid[node_y][node_x + 1]
+                elif flow == 2:
+                    flows_into = self.grid[node_y + 1][node_x + 1]
+                elif flow == 4:
+                    flows_into = self.grid[node_y + 1][node_x]
+                elif flow == 8:
+                    flows_into = self.grid[node_y + 1][node_x - 1]
+                elif flow == 16:
+                    flows_into = self.grid[node_y][node_x - 1]
+                elif flow == 32:
+                    flows_into = self.grid[node_y - 1][node_x - 1]
+                elif flow == 64:
+                    flows_into = self.grid[node_y - 1][node_x]
+                elif flow == 128:
+                    flows_into = self.grid[node_y - 1][node_x + 1]
+
+                # TODO: keep reference in cell to the node that we flow into
+
+                while current_node.NAME != target:
+
+                    node_x = current_node.abs
+                    node_y = current_node.ord
+
+                    flow = current_node.FLOW
+
+                    # grid[row][column]
+
+                    if flow == 1:
+                        current_node = self.grid[node_y][node_x + 1]
+                    elif flow == 2:
+                        current_node = self.grid[node_y + 1][node_x + 1]
+                    elif flow == 4:
+                        current_node = self.grid[node_y + 1][node_x]
+                    elif flow == 8:
+                        current_node = self.grid[node_y + 1][node_x - 1]
+                    elif flow == 16:
+                        current_node = self.grid[node_y][node_x - 1]
+                    elif flow == 32:
+                        current_node = self.grid[node_y - 1][node_x - 1]
+                    elif flow == 64:
+                        current_node = self.grid[node_y - 1][node_x]
+                    elif flow == 128:
+                        current_node = self.grid[node_y - 1][node_x + 1]
+                    path.append(current_node)
+
+                paths.append(path)
+
+        return paths
 
     def draw_grid_height(self):
 
         for row in self.grid:
             for cell in row:
-
                 xmin = cell.abs * cell.size
                 ymin = cell.ord * cell.size
 
@@ -413,7 +476,6 @@ class CellGrid(Canvas):
 
         for row in self.grid:
             for cell in row:
-
                 text = str(self.grid.index(row)) + "" + str(row.index(cell))
 
                 xmin = cell.abs * cell.size
@@ -425,13 +487,14 @@ class CellGrid(Canvas):
 
         for row in self.grid:
             for cell in row:
-                flow = cell.flow
+                # cell = self.grid[col.abs][col.ord]
+
+                flow = cell.FLOW
 
                 xmin = cell.abs * cell.size
                 ymin = cell.ord * cell.size
 
                 cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=flow)
-
 
     def draw(self):
         for row in self.grid:
@@ -443,30 +506,31 @@ class CellGrid(Canvas):
         for row in self.grid:
             for cell in row:
 
+                # cell = self.grid[col.abs][col.ord]
+
                 xmin = cell.abs * cell.size
                 ymin = cell.ord * cell.size
 
                 arrow = ""
 
-                if cell.flow == 1:
+                if cell.FLOW == 1:
                     arrow = "→"
-                elif cell.flow == 2:
+                elif cell.FLOW == 2:
                     arrow = "↘"
-                elif cell.flow == 4:
+                elif cell.FLOW == 4:
                     arrow = "↓"
-                elif cell.flow == 8:
+                elif cell.FLOW == 8:
                     arrow = "↙"
-                elif cell.flow == 16:
+                elif cell.FLOW == 16:
                     arrow = "←"
-                elif cell.flow == 32:
+                elif cell.FLOW == 32:
                     arrow = "↖"
-                elif cell.flow == 64:
+                elif cell.FLOW == 64:
                     arrow = "↑"
-                elif cell.flow == 128:
+                elif cell.FLOW == 128:
                     arrow = "↗"
 
                 cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=arrow)
-
 
     def draw_text_in_cells(self, coordinate_and_cell):
 
