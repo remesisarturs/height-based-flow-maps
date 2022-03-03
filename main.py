@@ -2,7 +2,7 @@ import csv
 
 import networkx as nx
 from matplotlib import pyplot as plt
-
+import math
 from tkinter import *
 
 
@@ -322,15 +322,15 @@ class CellGrid(Canvas):
 
                             if n == left or n == right or n == top or n == bottom:
                                 distance = 1
-                            elif n == top_left or n == top_right or n == bottom_left or bottom_right:
-                                distance = 1.414  # sqrt of 2
+                            elif n == top_left or n == top_right or n == bottom_left or n == bottom_right:
+                                distance = math.sqrt(2) # sqrt of 2
 
-                            drop = (change_in_height / distance) * 100
+                            drop = (change_in_height / distance)
                             drop_for_neighbors.append(drop)
 
                         min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
 
-                        # min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+                        #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
                         if min_neighbor == left:
                             cell.FLOW = 16
@@ -371,19 +371,34 @@ class CellGrid(Canvas):
 
         self.bind("<Button-2>", self.draw_flow_arrows)
 
-        self.draw()
+
 
         paths = self.find_paths_from_target_to_source(coordinate_and_cell)
 
-        print()
+        self.draw_paths(paths)
 
-        
+        self.draw()
+        #self.bind("<Button-2>", self.draw_paths)
+
+
 
         # self.draw_grid_height()
 
         # self.draw_grid_indices()
 
         # self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
+    def draw_paths(self, paths):
+
+        for path in paths:
+
+            for cell in path:
+
+                if cell.IS_SOURCE_OR_DESTINATION_CELL:
+                    cell.height = 250
+                else:
+                    cell.height = -250
+
 
     def find_paths_from_target_to_source(self, coordinate_and_cell):
 
@@ -624,7 +639,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 16
+    CELL_SIZE = 17
 
     input_points = import_points()
 
