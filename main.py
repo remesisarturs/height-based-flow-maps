@@ -289,29 +289,37 @@ class CellGrid(Canvas):
 
             self.grid[row][column].NAME = str(point_info[0][0])
 
-        for row in self.grid:
-            for cell in row:
-                row_id = 48  # 48
-                col_id = 40  # 40
-                cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
+        self.grid[48][40].height = -20
 
         for row in self.grid:
             for cell in row:
+                row_id = 40  # 40
+                col_id = 48  # 48
+
+                cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
+
+        for row in self.grid:   # row   = y
+            for cell in row:    # cell  = x
 
                 x = cell.abs
                 y = cell.ord
 
+                # grid[y][x]
+
+                if x == 18 and y == 2:
+                    a = []
+
                 if (x - 1 >= 0 and y - 1 >= 0):
                     try:
-                        left = self.grid[x - 1][y]
-                        bottom = self.grid[x][y + 1]
-                        right = self.grid[x + 1][y]
-                        top = self.grid[x][y - 1]
+                        left = self.grid[y][x - 1]
+                        bottom = self.grid[y + 1][x]
+                        right = self.grid[y][x + 1]
+                        top = self.grid[y - 1][x]
 
-                        top_left = self.grid[x - 1][y - 1]
-                        top_right = self.grid[x + 1][y - 1]
-                        bottom_left = self.grid[x - 1][y + 1]
-                        bottom_right = self.grid[x + 1][y + 1]
+                        top_left = self.grid[y - 1][x - 1]
+                        top_right = self.grid[y - 1][x + 1]
+                        bottom_left = self.grid[y + 1][x - 1]
+                        bottom_right = self.grid[y + 1][x + 1]
 
                         neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
                         drop_for_neighbors = []
@@ -382,11 +390,11 @@ class CellGrid(Canvas):
 
 
 
-        # self.draw_grid_height()
+        #self.draw_grid_height()
 
-        # self.draw_grid_indices()
+        #self.draw_grid_indices()
 
-        # self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+        self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
 
     def draw_paths(self, paths):
 
@@ -491,7 +499,7 @@ class CellGrid(Canvas):
 
         for row in self.grid:
             for cell in row:
-                text = str(self.grid.index(row)) + "" + str(row.index(cell))
+                text = str(self.grid.index(row)) + "" + str(row.index(cell)) # y + x
 
                 xmin = cell.abs * cell.size
                 ymin = cell.ord * cell.size
@@ -639,7 +647,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 17
+    CELL_SIZE = 20
 
     input_points = import_points()
 
