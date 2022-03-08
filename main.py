@@ -221,7 +221,12 @@ class Cell():
         self.height = 0.0
         # self.flow = 0.0
 
-    def increase_height(self):
+    def increase_height(self, neighbors):
+
+        for n in neighbors:
+            if n.height + Cell.STEP < Cell.MAX_HEIGHT:
+                n.height = n.height + Cell.STEP
+                n.draw()
 
         if self.height + Cell.STEP < Cell.MAX_HEIGHT:
             self.height = self.height + Cell.STEP
@@ -664,12 +669,39 @@ class CellGrid(Canvas):
         return row, column
 
     def handle_mouse_click_left(self, event):
-        row, column = self._eventCoords(event)
-        cell = self.grid[row][column]
-        cell.increase_height()
+        y, x = self._eventCoords(event) # row = y , col = x
+        cell = self.grid[y][x]
+
+        if y - 1 >= 0:
+            top = self.grid[y - 1][x]
+        else:
+            top = None
+        if x - 1 >= 0:
+            left = self.grid[y][x - 1]
+        else:
+            left = None
+        if x + 1 < NR_OF_COLS:
+            right = self.grid[y][x + 1]
+        else:
+            right = None
+        if y + 1 < NR_OF_ROWS :
+            bottom = self.grid[y + 1][x]
+        else:
+            bottom = None
+
+        neighbors = [top, bottom, left, right]
+
+        neighbors = [i for i in neighbors if i]
+
+        cell.increase_height(neighbors=neighbors)
+
         cell.draw()
         # add the cell to the list of cell switched during the click
         self.switched.append(cell)
+
+        for n in neighbors:
+            self.switched.append(n)
+
 
     def handle_mouse_click_right(self, event):
         row, column = self._eventCoords(event)
@@ -680,11 +712,34 @@ class CellGrid(Canvas):
         self.switched.append(cell)
 
     def handle_mouse_motion_left(self, event):
-        row, column = self._eventCoords(event)
-        cell = self.grid[row][column]
+        y, x = self._eventCoords(event)
+        cell = self.grid[y][x]
 
         if cell not in self.switched:
-            cell.increase_height()
+
+            if y - 1 >= 0:
+                top = self.grid[y - 1][x]
+            else:
+                top = None
+            if x - 1 >= 0:
+                left = self.grid[y][x - 1]
+            else:
+                left = None
+            if x + 1 < NR_OF_COLS:
+                right = self.grid[y][x + 1]
+            else:
+                right = None
+            if y + 1 < NR_OF_ROWS:
+                bottom = self.grid[y + 1][x]
+            else:
+                bottom = None
+
+            neighbors = [top, bottom, left, right]
+
+            neighbors = [i for i in neighbors if i]
+
+            cell.increase_height(neighbors=neighbors)
+
             cell.draw()
             self.switched.append(cell)
 
@@ -720,17 +775,17 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
-    NR_OF_ROWS = 50
-    NR_OF_CELLS = 50
-    CELL_SIZE = 17
+    NR_OF_ROWS = 100
+    NR_OF_COLS = 100
+    CELL_SIZE = 10
 
     input_points = import_points()
 
     bounds = obtain_bounds(input_points)
 
-    coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=NR_OF_ROWS, nr_of_columns=NR_OF_CELLS, input_points_coordinates=input_points)
+    coordinate_and_cell = compute_cell_for_coordinate(bounds=bounds, nr_of_rows=NR_OF_ROWS, nr_of_columns=NR_OF_COLS, input_points_coordinates=input_points)
 
     app = Tk()
-    grid = CellGrid(master=app, rowNumber=NR_OF_ROWS, columnNumber=NR_OF_CELLS, cellSize=CELL_SIZE, coordinate_and_cell=coordinate_and_cell)
+    grid = CellGrid(master=app, rowNumber=NR_OF_ROWS, columnNumber=NR_OF_COLS, cellSize=CELL_SIZE, coordinate_and_cell=coordinate_and_cell)
     grid.pack()
     app.mainloop()
