@@ -4,6 +4,7 @@ import networkx as nx
 from matplotlib import pyplot as plt
 import math
 from tkinter import *
+from functools import partial
 
 
 def obtain_bounds(input_points):
@@ -209,6 +210,7 @@ class Cell():
     IS_SOURCE_OR_DESTINATION_CELL = False
     NAME = None
     FLOW = 0
+    PATH_DRAWN = False
 
     def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
@@ -271,12 +273,17 @@ class Cell():
 
             self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=color, outline=outline)
 
+
 class CellGrid(Canvas):
     def __init__(self, master, rowNumber, columnNumber, cellSize, coordinate_and_cell, *args, **kwargs):
-        Canvas.__init__(self, master, width=cellSize * columnNumber, height=cellSize * rowNumber, *args, **kwargs)
+
+        grid_width = cellSize * columnNumber
+        grid_height = cellSize * rowNumber
+
+        Canvas.__init__(self, master, width=grid_width + 100, height=grid_height, *args, **kwargs)
 
         for i in coordinate_and_cell:
-            if i[0][0] == "FL":
+            if i[0][0] == "MO":
                 source_col = i[2]
                 source_row = i[1]
                 break
@@ -317,8 +324,62 @@ class CellGrid(Canvas):
 
                 cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
 
-        for row in self.grid:   # row   = y
-            for cell in row:    # cell  = x
+        self.compute_flow(rowNumber, columnNumber)
+
+        # memorize the cells that have been modified to avoid many switching of state during mouse motion.
+        self.switched = []
+
+        # bind click action
+        self.bind("<Button-1>", self.handle_mouse_click_left)
+        # bind click action
+        self.bind("<Button-3>", self.handle_mouse_click_right)
+        # bind moving while clicking
+        self.bind("<B1-Motion>", self.handle_mouse_motion_left)
+        # bind moving while clicking
+        self.bind("<B3-Motion>", self.handle_mouse_motion_right)
+        # bind release button action - clear the memory of midified cells.
+        self.bind("<ButtonRelease-1>", lambda event: self.switched.clear())
+
+        self.bind("<MouseWheel>", self.do_zoom)
+
+        self.bind("<Button-2>", lambda event, a=rowNumber, b=columnNumber: self.compute_and_draw(a, b))
+
+        #paths = self.find_paths_from_target_to_source(coordinate_and_cell)
+
+        #self.draw_paths(paths)
+
+        self.draw()
+
+        b = Button(master, text='Paths', command=partial(self.draw_paths))
+        b.place(x=grid_width + 25, y=50)
+
+        # b2 = Button(master, text='button', command=partial(self.draw_paths, paths))
+        # b2.place(x=grid_width + 25, y=75)
+
+        #Canvas.bind("<1>", partial(self.draw_paths, paths))
+
+        #self.b.bind("<Button-1>", partial(self.draw_paths, paths))
+
+        # self.bind("<Button-2>", self.draw_paths)
+
+        # self.draw_grid_height()
+
+        # self.draw_grid_indices()
+
+        self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
+
+    #def clear_paths(self):
+
+    def compute_and_draw(self, rowNumber, columnNumber):
+
+        self.compute_flow(rowNumber, columnNumber)
+        self.draw_flow_arrows()
+
+
+    def compute_flow(self, rowNumber, columnNumber):
+
+        for row in self.grid:  # row   = y
+            for cell in row:  # cell  = x
 
                 x = cell.abs
                 y = cell.ord
@@ -370,14 +431,14 @@ class CellGrid(Canvas):
                         if n == left or n == right or n == top or n == bottom:
                             distance = 1
                         elif n == top_left or n == top_right or n == bottom_left or n == bottom_right:
-                            distance = math.sqrt(2) # sqrt of 2
+                            distance = math.sqrt(2)  # sqrt of 2
 
                         drop = (change_in_height / distance)
                         drop_for_neighbors.append(drop)
 
                 min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
 
-                #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+                # min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
                 if min_neighbor == left:
                     cell.FLOW = 16
@@ -397,56 +458,33 @@ class CellGrid(Canvas):
                     cell.FLOW = 2
 
 
+    def draw_paths(self):
 
-
-        # memorize the cells that have been modified to avoid many switching of state during mouse motion.
-        self.switched = []
-
-        # bind click action
-        self.bind("<Button-1>", self.handle_mouse_click_left)
-        # bind click action
-        self.bind("<Button-3>", self.handle_mouse_click_right)
-        # bind moving while clicking
-        self.bind("<B1-Motion>", self.handle_mouse_motion_left)
-        # bind moving while clicking
-        self.bind("<B3-Motion>", self.handle_mouse_motion_right)
-        # bind release button action - clear the memory of midified cells.
-        self.bind("<ButtonRelease-1>", lambda event: self.switched.clear())
-
-        self.bind("<MouseWheel>", self.do_zoom)
-
-        self.bind("<Button-2>", self.draw_flow_arrows)
+        print("a")
 
         paths = self.find_paths_from_target_to_source(coordinate_and_cell)
-
-        self.draw_paths(paths)
-
-        self.draw()
-        #self.bind("<Button-2>", self.draw_paths)
-
-        #self.draw_grid_height()
-
-        #self.draw_grid_indices()
-
-        self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
-
-    def draw_paths(self, paths):
 
         for path in paths:
 
             for cell in path:
 
-                cell.set_color('white')
+                outline = Cell.EMPTY_COLOR_BORDER
 
-                # if cell.IS_SOURCE_OR_DESTINATION_CELL:
-                #     cell.height = 250
-                # else:
-                #     cell.height = -250
+                # cell.set_color('white')
+                xmin = cell.abs * cell.size
+                xmax = xmin + cell.size
+                ymin = cell.ord * cell.size
+                ymax = ymin + cell.size
+
+                if cell.IS_SOURCE_OR_DESTINATION_CELL:
+                    pass
+                else:
+                    cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="blue", outline=outline)
 
 
     def find_paths_from_target_to_source(self, coordinate_and_cell):
 
-        target = "FL"
+        target = "MO"
 
         paths = []
 
@@ -535,7 +573,7 @@ class CellGrid(Canvas):
 
         for row in self.grid:
             for cell in row:
-                text = str(self.grid.index(row)) + "" + str(row.index(cell)) # y + x
+                text = str(self.grid.index(row)) + "" + str(row.index(cell))  # y + x
 
                 xmin = cell.abs * cell.size
                 ymin = cell.ord * cell.size
@@ -560,7 +598,7 @@ class CellGrid(Canvas):
             for cell in row:
                 cell.draw()
 
-    def draw_flow_arrows(self, event):
+    def draw_flow_arrows(self):
 
         for row in self.grid:
             for cell in row:
@@ -590,7 +628,7 @@ class CellGrid(Canvas):
                     arrow = "↗"
 
                 cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=arrow)
-                cell.master.update()
+                #cell.master.update()
 
     def draw_text_in_cells(self, coordinate_and_cell):
 
@@ -684,7 +722,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 14
+    CELL_SIZE = 17
 
     input_points = import_points()
 
