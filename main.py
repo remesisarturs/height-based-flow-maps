@@ -257,10 +257,29 @@ class Cell():
             self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=fill, outline=outline)
             # self.master.create_text((xmin + self.size/2, ymin + self.size/2), text="")
 
+    def set_color(self, color):
+
+        outline = Cell.EMPTY_COLOR_BORDER
+
+        if self.master != None:
+            xmin = self.abs * self.size
+            xmax = xmin + self.size
+            ymin = self.ord * self.size
+            ymax = ymin + self.size
+
+            self.master.delete("all")
+
+            self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=color, outline=outline)
 
 class CellGrid(Canvas):
     def __init__(self, master, rowNumber, columnNumber, cellSize, coordinate_and_cell, *args, **kwargs):
         Canvas.__init__(self, master, width=cellSize * columnNumber, height=cellSize * rowNumber, *args, **kwargs)
+
+        for i in coordinate_and_cell:
+            if i[0][0] == "FL":
+                source_col = i[2]
+                source_row = i[1]
+                break
 
         self.cellSize = cellSize
 
@@ -289,12 +308,12 @@ class CellGrid(Canvas):
 
             self.grid[row][column].NAME = str(point_info[0][0])
 
-        self.grid[48][40].height = -20
+        self.grid[source_col][source_row].height = -20
 
         for row in self.grid:
             for cell in row:
-                row_id = 40  # 40
-                col_id = 48  # 48
+                row_id = source_row  # 40
+                col_id = source_col  # 48
 
                 cell.height = cell.height + 0.05 * ((cell.abs - row_id) ** 2 + (cell.ord - col_id) ** 2)
 
@@ -304,62 +323,81 @@ class CellGrid(Canvas):
                 x = cell.abs
                 y = cell.ord
 
-                # grid[y][x]
+                if x - 1 >= 0:
+                    left = self.grid[y][x - 1]
+                else:
+                    left = None
+                if y + 1 < rowNumber:
+                    bottom = self.grid[y + 1][x]
+                else:
+                    bottom = None
+                if x + 1 < columnNumber:
+                    right = self.grid[y][x + 1]
+                else:
+                    right = None
+                if y - 1 >= 0:
+                    top = self.grid[y - 1][x]
+                else:
+                    top = None
 
-                if x == 18 and y == 2:
-                    a = []
+                if x - 1 >= 0 and y - 1 >= 0:
+                    top_left = self.grid[y - 1][x - 1]
+                else:
+                    top_left = None
+                if y - 1 >= 0 and x + 1 < columnNumber:
+                    top_right = self.grid[y - 1][x + 1]
+                else:
+                    top_right = None
+                if x - 1 >= 0 and y + 1 < rowNumber:
+                    bottom_left = self.grid[y + 1][x - 1]
+                else:
+                    bottom_left = None
+                if x + 1 < columnNumber and y + 1 < rowNumber:
+                    bottom_right = self.grid[y + 1][x + 1]
+                else:
+                    bottom_right = None
 
-                if (x - 1 >= 0 and y - 1 >= 0):
-                    try:
-                        left = self.grid[y][x - 1]
-                        bottom = self.grid[y + 1][x]
-                        right = self.grid[y][x + 1]
-                        top = self.grid[y - 1][x]
+                neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
+                drop_for_neighbors = []
 
-                        top_left = self.grid[y - 1][x - 1]
-                        top_right = self.grid[y - 1][x + 1]
-                        bottom_left = self.grid[y + 1][x - 1]
-                        bottom_right = self.grid[y + 1][x + 1]
+                neighbors = [i for i in neighbors if i]
 
-                        neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
-                        drop_for_neighbors = []
+                for n in neighbors:
 
-                        for n in neighbors:
+                    if n != None:
+                        change_in_height = cell.height - n.height
 
-                            change_in_height = cell.height - n.height
+                        if n == left or n == right or n == top or n == bottom:
+                            distance = 1
+                        elif n == top_left or n == top_right or n == bottom_left or n == bottom_right:
+                            distance = math.sqrt(2) # sqrt of 2
 
-                            if n == left or n == right or n == top or n == bottom:
-                                distance = 1
-                            elif n == top_left or n == top_right or n == bottom_left or n == bottom_right:
-                                distance = math.sqrt(2) # sqrt of 2
+                        drop = (change_in_height / distance)
+                        drop_for_neighbors.append(drop)
 
-                            drop = (change_in_height / distance)
-                            drop_for_neighbors.append(drop)
+                min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
 
-                        min_neighbor = neighbors[drop_for_neighbors.index(max(drop_for_neighbors))]
+                #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
 
-                        #min_neighbor = min([left, bottom, right, top, top_left, top_right, bottom_left, bottom_right], key=lambda x: x.height)
+                if min_neighbor == left:
+                    cell.FLOW = 16
+                elif min_neighbor == right:
+                    cell.FLOW = 1
+                elif min_neighbor == bottom:
+                    cell.FLOW = 4
+                elif min_neighbor == top:
+                    cell.FLOW = 64
+                elif min_neighbor == top_left:
+                    cell.FLOW = 32
+                elif min_neighbor == top_right:
+                    cell.FLOW = 128
+                elif min_neighbor == bottom_left:
+                    cell.FLOW = 8
+                elif min_neighbor == bottom_right:
+                    cell.FLOW = 2
 
-                        if min_neighbor == left:
-                            cell.FLOW = 16
-                        elif min_neighbor == right:
-                            cell.FLOW = 1
-                        elif min_neighbor == bottom:
-                            cell.FLOW = 4
-                        elif min_neighbor == top:
-                            cell.FLOW = 64
-                        elif min_neighbor == top_left:
-                            cell.FLOW = 32
-                        elif min_neighbor == top_right:
-                            cell.FLOW = 128
-                        elif min_neighbor == bottom_left:
-                            cell.FLOW = 8
-                        elif min_neighbor == bottom_right:
-                            cell.FLOW = 2
 
-                        # cell.height = -10
-                    except:
-                        continue
+
 
         # memorize the cells that have been modified to avoid many switching of state during mouse motion.
         self.switched = []
@@ -379,16 +417,12 @@ class CellGrid(Canvas):
 
         self.bind("<Button-2>", self.draw_flow_arrows)
 
-
-
         paths = self.find_paths_from_target_to_source(coordinate_and_cell)
 
         self.draw_paths(paths)
 
         self.draw()
         #self.bind("<Button-2>", self.draw_paths)
-
-
 
         #self.draw_grid_height()
 
@@ -402,10 +436,12 @@ class CellGrid(Canvas):
 
             for cell in path:
 
-                if cell.IS_SOURCE_OR_DESTINATION_CELL:
-                    cell.height = 250
-                else:
-                    cell.height = -250
+                cell.set_color('white')
+
+                # if cell.IS_SOURCE_OR_DESTINATION_CELL:
+                #     cell.height = 250
+                # else:
+                #     cell.height = -250
 
 
     def find_paths_from_target_to_source(self, coordinate_and_cell):
@@ -554,6 +590,7 @@ class CellGrid(Canvas):
                     arrow = "↗"
 
                 cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=arrow)
+                cell.master.update()
 
     def draw_text_in_cells(self, coordinate_and_cell):
 
@@ -647,7 +684,7 @@ if __name__ == '__main__':
 
     NR_OF_ROWS = 50
     NR_OF_CELLS = 50
-    CELL_SIZE = 20
+    CELL_SIZE = 14
 
     input_points = import_points()
 
