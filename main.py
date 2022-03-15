@@ -6,6 +6,8 @@ import math
 from tkinter import *
 from functools import partial
 
+import networkx as nx
+
 
 def obtain_bounds(input_points):
     for item in input_points:
@@ -358,7 +360,7 @@ class CellGrid(Canvas):
         b = Button(master, text='Paths', command=partial(self.draw_paths))
         b.place(x=grid_width + 25, y=50)
 
-
+        self.compute_shortest_paths(rowNumber=rowNumber, columnNumber=columnNumber)
 
         # b2 = Button(master, text='button', command=partial(self.draw_paths, paths))
         # b2.place(x=grid_width + 25, y=75)
@@ -486,6 +488,23 @@ class CellGrid(Canvas):
                 else:
                     cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="blue", outline=outline)
 
+    def draw_paths_bfs(self, path):
+
+        for cell in path:
+
+            outline = Cell.EMPTY_COLOR_BORDER
+
+            # cell.set_color('white')
+            xmin = cell.abs * cell.size
+            xmax = xmin + cell.size
+            ymin = cell.ord * cell.size
+            ymax = ymin + cell.size
+
+            if cell.IS_SOURCE_OR_DESTINATION_CELL:
+                pass
+            else:
+                cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="yellow", outline=outline)
+
     def find_paths_from_target_to_source(self, coordinate_and_cell):
 
         target = "A"
@@ -564,15 +583,106 @@ class CellGrid(Canvas):
 
         return paths
 
-    def compute_shortest_paths(self, paths):
+    def get_neighbors(self, cell, rowNumber, columnNumber):
 
-        for path in paths:
+        x = cell.abs
+        y = cell.ord
 
-            for cell in path:
-                pass
+        if x - 1 >= 0:
+            left = self.grid[y][x - 1]
+        else:
+            left = None
+        if y + 1 < rowNumber:
+            bottom = self.grid[y + 1][x]
+        else:
+            bottom = None
+        if x + 1 < columnNumber:
+            right = self.grid[y][x + 1]
+        else:
+            right = None
+        if y - 1 >= 0:
+            top = self.grid[y - 1][x]
+        else:
+            top = None
 
+        if x - 1 >= 0 and y - 1 >= 0:
+            top_left = self.grid[y - 1][x - 1]
+        else:
+            top_left = None
+        if y - 1 >= 0 and x + 1 < columnNumber:
+            top_right = self.grid[y - 1][x + 1]
+        else:
+            top_right = None
+        if x - 1 >= 0 and y + 1 < rowNumber:
+            bottom_left = self.grid[y + 1][x - 1]
+        else:
+            bottom_left = None
+        if x + 1 < columnNumber and y + 1 < rowNumber:
+            bottom_right = self.grid[y + 1][x + 1]
+        else:
+            bottom_right = None
 
-        pass
+        neighbors = [left, bottom, right, top, top_left, top_right, bottom_left, bottom_right]
+        drop_for_neighbors = []
+
+        neighbors = [i for i in neighbors if i]
+
+        return neighbors
+
+    def find_path_bfs(self, start, end, rowNumber, columnNumber):
+        queue = [(start, [])]  # start point, empty path
+
+        visited = []
+
+        while len(queue) > 0:
+            node, path = queue.pop(0)
+            path.append(node)
+
+            # mark_visited(node, v)
+            visited.append(node)
+
+            if node == end:
+                return path
+
+            # adj_nodes = get_neighbors(node, grid)
+
+            adj_nodes = self.get_neighbors(node, rowNumber=rowNumber, columnNumber=columnNumber)
+
+            for item in adj_nodes:
+                # if not is_visited(item, v):
+                #     queue.append((item, path[:]))
+
+                if item not in visited:
+                    queue.append((item, path[:]))
+
+        return None  # no path found
+
+    
+
+    def compute_shortest_paths(self, rowNumber, columnNumber):
+
+        paths = self.find_paths_from_target_to_source(coordinate_and_cell)
+
+        # for path in paths:
+        #
+        # if len(path) <= 1:
+        #     continue
+
+        # for row in self.grid:
+        #
+        #     for grid_cell in row:
+        #
+        #         for path_cell in path:
+
+        grid_cell = self.grid[5][5]
+
+        path_cell = self.grid[5][13]   #paths[2][0]
+
+        shortest_path = self.find_path_bfs(grid_cell, path_cell, rowNumber=rowNumber, columnNumber=columnNumber)
+
+        self.draw_paths_bfs(shortest_path)
+
+            # print(len(shortest_path))
 
     def draw_grid_height(self):
 
