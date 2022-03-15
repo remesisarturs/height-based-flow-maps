@@ -288,7 +288,7 @@ class CellGrid(Canvas):
         Canvas.__init__(self, master, width=grid_width + 100, height=grid_height, *args, **kwargs)
 
         for i in coordinate_and_cell:
-            if i[0][0] == "MO":
+            if i[0][0] == "A":
                 source_col = i[2]
                 source_row = i[1]
                 break
@@ -349,21 +349,23 @@ class CellGrid(Canvas):
 
         self.bind("<Button-2>", lambda event, a=rowNumber, b=columnNumber: self.compute_and_draw(a, b))
 
-        #paths = self.find_paths_from_target_to_source(coordinate_and_cell)
+        # paths = self.find_paths_from_target_to_source(coordinate_and_cell)
 
-        #self.draw_paths(paths)
+        # self.draw_paths(paths)
 
         self.draw()
 
         b = Button(master, text='Paths', command=partial(self.draw_paths))
         b.place(x=grid_width + 25, y=50)
 
+
+
         # b2 = Button(master, text='button', command=partial(self.draw_paths, paths))
         # b2.place(x=grid_width + 25, y=75)
 
-        #Canvas.bind("<1>", partial(self.draw_paths, paths))
+        # Canvas.bind("<1>", partial(self.draw_paths, paths))
 
-        #self.b.bind("<Button-1>", partial(self.draw_paths, paths))
+        # self.b.bind("<Button-1>", partial(self.draw_paths, paths))
 
         # self.bind("<Button-2>", self.draw_paths)
 
@@ -373,13 +375,12 @@ class CellGrid(Canvas):
 
         self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
 
-    #def clear_paths(self):
+    # def clear_paths(self):
 
     def compute_and_draw(self, rowNumber, columnNumber):
 
         self.compute_flow(rowNumber, columnNumber)
         self.draw_flow_arrows()
-
 
     def compute_flow(self, rowNumber, columnNumber):
 
@@ -462,7 +463,6 @@ class CellGrid(Canvas):
                 elif min_neighbor == bottom_right:
                     cell.FLOW = 2
 
-
     def draw_paths(self):
 
         print("a")
@@ -486,10 +486,9 @@ class CellGrid(Canvas):
                 else:
                     cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="blue", outline=outline)
 
-
     def find_paths_from_target_to_source(self, coordinate_and_cell):
 
-        target = "MO"
+        target = "A"
 
         paths = []
 
@@ -565,6 +564,16 @@ class CellGrid(Canvas):
 
         return paths
 
+    def compute_shortest_paths(self, paths):
+
+        for path in paths:
+
+            for cell in path:
+                pass
+
+
+        pass
+
     def draw_grid_height(self):
 
         for row in self.grid:
@@ -633,7 +642,7 @@ class CellGrid(Canvas):
                     arrow = "↗"
 
                 cell.master.create_text((xmin + cell.size / 2, ymin + cell.size / 2), text=arrow)
-                #cell.master.update()
+                # cell.master.update()
 
     def draw_text_in_cells(self, coordinate_and_cell):
 
@@ -669,7 +678,7 @@ class CellGrid(Canvas):
         return row, column
 
     def handle_mouse_click_left(self, event):
-        y, x = self._eventCoords(event) # row = y , col = x
+        y, x = self._eventCoords(event)  # row = y , col = x
         cell = self.grid[y][x]
 
         if y - 1 >= 0:
@@ -684,7 +693,7 @@ class CellGrid(Canvas):
             right = self.grid[y][x + 1]
         else:
             right = None
-        if y + 1 < NR_OF_ROWS :
+        if y + 1 < NR_OF_ROWS:
             bottom = self.grid[y + 1][x]
         else:
             bottom = None
@@ -701,7 +710,6 @@ class CellGrid(Canvas):
 
         for n in neighbors:
             self.switched.append(n)
-
 
     def handle_mouse_click_right(self, event):
         row, column = self._eventCoords(event)
@@ -760,7 +768,7 @@ class CellGrid(Canvas):
 
 
 def import_points():
-    with open(r"C:\Users\20175326\Desktop\Thesis\Data\USPos.csv", newline='') as f:
+    with open(r"input\1_s_2_t.csv", newline='') as f:
         reader = csv.reader(f)
         data = list(reader)
 
