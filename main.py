@@ -214,6 +214,9 @@ class Cell():
     FLOW = 0
     PATH_DRAWN = False
 
+    PATH_PAIRS = []
+
+
     def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
         self.master = master
@@ -360,7 +363,9 @@ class CellGrid(Canvas):
         b = Button(master, text='Paths', command=partial(self.draw_paths))
         b.place(x=grid_width + 25, y=50)
 
-        self.compute_shortest_paths(rowNumber=rowNumber, columnNumber=columnNumber)
+        # self.compute_shortest_paths(rowNumber=rowNumber, columnNumber=columnNumber)
+
+        self.compute_distances_between_cells_and_paths()
 
         # b2 = Button(master, text='button', command=partial(self.draw_paths, paths))
         # b2.place(x=grid_width + 25, y=75)
@@ -657,7 +662,51 @@ class CellGrid(Canvas):
 
         return None  # no path found
 
-    
+    def compute_distances_between_cells_and_paths(self):
+
+        paths = self.find_paths_from_target_to_source(coordinate_and_cell)
+
+        # for each of the paths
+
+        for row in self.grid:
+            for grid_cell in row:
+
+                path_tuples = []
+
+                for path in paths:
+
+                    if len(path) <= 1:
+                        continue
+
+                    distances = []
+
+                    for path_cell in path:
+
+                        if path_cell != grid_cell:
+
+                            x_1 = grid_cell.abs
+                            y_1 = grid_cell.ord
+
+                            x_2 = path_cell.abs
+                            y_2 = path_cell.ord
+
+                            distance = float(math.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2))
+
+                            distances.append(distance)
+
+                    index_min = min(range(len(distances)), key=distances.__getitem__)
+
+                    closest_path_cell = path[index_min]
+
+                    path_tuples.append((path, closest_path_cell, distances[index_min]))
+
+                    grid_cell.PATH_PAIRS = path_tuples
+
+        # path_cell = self.grid[0][0]
+
+    def compute_distance_between_two_points(self):
+
+        pass
 
     def compute_shortest_paths(self, rowNumber, columnNumber):
 
@@ -676,13 +725,13 @@ class CellGrid(Canvas):
 
         grid_cell = self.grid[5][5]
 
-        path_cell = self.grid[5][13]   #paths[2][0]
+        path_cell = self.grid[5][13]  # paths[2][0]
 
         shortest_path = self.find_path_bfs(grid_cell, path_cell, rowNumber=rowNumber, columnNumber=columnNumber)
 
         self.draw_paths_bfs(shortest_path)
 
-            # print(len(shortest_path))
+        # print(len(shortest_path))
 
     def draw_grid_height(self):
 
@@ -893,8 +942,8 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
-    NR_OF_ROWS = 100
-    NR_OF_COLS = 100
+    NR_OF_ROWS = 10
+    NR_OF_COLS = 10
     CELL_SIZE = 10
 
     input_points = import_points()
