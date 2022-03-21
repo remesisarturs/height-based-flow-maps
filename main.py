@@ -1,13 +1,14 @@
 import csv
 
 import networkx as nx
+import numpy as np
 from matplotlib import pyplot as plt
 import math
 from tkinter import *
 from functools import partial
 
 import networkx as nx
-
+import time
 
 def obtain_bounds(input_points):
     for item in input_points:
@@ -200,7 +201,7 @@ def main():
     plt.grid()
 
     plt.show()
-    print()
+    #print()
 
 
 class Cell():
@@ -215,7 +216,6 @@ class Cell():
     PATH_DRAWN = False
 
     PATH_PAIRS = []
-
 
     def __init__(self, master, x, y, size, flow):
         """ Constructor of the object called by Cell(...) """
@@ -365,7 +365,11 @@ class CellGrid(Canvas):
 
         # self.compute_shortest_paths(rowNumber=rowNumber, columnNumber=columnNumber)
 
+        start = time.time()
+
         self.compute_distances_between_cells_and_paths()
+        end = time.time()
+        print(end - start)
 
         # b2 = Button(master, text='button', command=partial(self.draw_paths, paths))
         # b2.place(x=grid_width + 25, y=75)
@@ -380,9 +384,95 @@ class CellGrid(Canvas):
 
         # self.draw_grid_indices()
 
+        self.test_closest_cells()
+
+        # self.adjust_height()
+
+        self.adjust_height()
+
         self.draw_text_in_cells(coordinate_and_cell=coordinate_and_cell)
 
     # def clear_paths(self):
+
+    def test_closest_cells(self):
+
+        x = 25
+        y = 25
+
+        cell = self.grid[y][x].PATH_PAIRS[0][1]
+        outline = Cell.EMPTY_COLOR_BORDER
+
+        # cell.set_color('white')
+        xmin = cell.abs * cell.size
+        xmax = xmin + cell.size
+        ymin = cell.ord * cell.size
+        ymax = ymin + cell.size
+
+        cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="yellow", outline=outline)
+
+        cell = self.grid[y][x].PATH_PAIRS[1][1]
+        outline = Cell.EMPTY_COLOR_BORDER
+
+        # cell.set_color('white')
+        xmin = cell.abs * cell.size
+        xmax = xmin + cell.size
+        ymin = cell.ord * cell.size
+        ymax = ymin + cell.size
+
+        cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="yellow", outline=outline)
+
+        cell = self.grid[y][x]
+        outline = Cell.EMPTY_COLOR_BORDER
+
+        # cell.set_color('white')
+        xmin = cell.abs * cell.size
+        xmax = xmin + cell.size
+        ymin = cell.ord * cell.size
+        ymax = ymin + cell.size
+
+        cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="black", outline=outline)
+
+    def gaussian(self, x, mu, sig):
+        return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+
+    def adjust_height(self):
+
+        nr_of_points = 100
+
+        x_values_1 = np.linspace(-4, 2, nr_of_points)
+
+        x_values_2 = np.linspace(-2, 4, nr_of_points)
+
+        mu_1 = -1  # mean (location)
+        variance_1 = 0.25  # scale (squared)
+        sigma_1 = math.sqrt(variance_1)  # sigma/standard deviation (scale) = sqrt(variance)
+
+        mu_2 = 1  # mean (location)
+        variance_2 = 0.25  # scale (squared)
+        sigma_2 = math.sqrt(variance_2)  # sigma/standard deviation (scale) = sqrt(variance)
+
+        x_values_3 = np.linspace(-4, 4, nr_of_points)
+
+        y_1 = self.gaussian(x_values_1, mu_1, sigma_1)
+
+        y_2 = self.gaussian(x_values_2, mu_2, sigma_2)
+
+        # mp.plot(x_values_1, 1 - y_1)
+        #
+        # mp.plot(x_values_2, 1 - y_2)
+        #
+        # mp.plot(x_values_3, 1 - (y_1 + y_2))
+
+        for row in self.grid:
+            for cell in row:
+                d_1 = cell.PATH_PAIRS[0][2]
+                d_2 = cell.PATH_PAIRS[1][2]
+
+                cell.height = cell.height
+
+                #print()
+
+                pass
 
     def compute_and_draw(self, rowNumber, columnNumber):
 
@@ -472,7 +562,7 @@ class CellGrid(Canvas):
 
     def draw_paths(self):
 
-        print("a")
+        #print("a")
 
         paths = self.find_paths_from_target_to_source(coordinate_and_cell)
 
@@ -492,6 +582,8 @@ class CellGrid(Canvas):
                     pass
                 else:
                     cell.master.create_rectangle(xmin, ymin, xmax, ymax, fill="blue", outline=outline)
+
+        self.test_closest_cells()
 
     def draw_paths_bfs(self, path):
 
@@ -683,7 +775,6 @@ class CellGrid(Canvas):
                     for path_cell in path:
 
                         if path_cell != grid_cell:
-
                             x_1 = grid_cell.abs
                             y_1 = grid_cell.ord
 
@@ -942,9 +1033,9 @@ def import_points():
 if __name__ == '__main__':
     # bounds = [minx, maxx, miny, maxy]
 
-    NR_OF_ROWS = 10
-    NR_OF_COLS = 10
-    CELL_SIZE = 10
+    NR_OF_ROWS = 100
+    NR_OF_COLS = 100
+    CELL_SIZE = 7
 
     input_points = import_points()
 
