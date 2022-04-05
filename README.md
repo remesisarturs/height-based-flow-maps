@@ -1,2 +1,1 @@
-This is my master's thesis repository. 
-My thesis concerns a novel application of generating flow maps using a height based approach, similarly to how river networks are generated using DEMs (Digital Elevation Models).
+Python code for an interactive grid flow map. See the java version project for a more developed version.
